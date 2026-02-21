@@ -35,12 +35,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // IMPORT ROUTES
+console.log('📦 Loading routes...');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const paravetRoutes = require('./routes/paravetRoutes');
 const parentRoutes = require('./routes/parentRoutes');
 const doorstepRoutes = require('./routes/doorstepRoutes');
 const vetRoutes = require('./routes/vetRoutes');
+console.log('📹 Loading video call routes...');
+const videoCallRoutes = require('./routes/videoCall');
+console.log('✅ All routes loaded');
 const { errorHandler } = require('./middleware/errorHandler');
 
 /* =========================
@@ -62,12 +66,16 @@ mongoose
 /* =========================
    API Routes
 ========================= */
+console.log('🔗 Registering routes...');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/paravet', paravetRoutes);
 app.use('/api/parents', parentRoutes);
 app.use('/api/doorstep', doorstepRoutes);
 app.use('/api/clinics', vetRoutes);
+console.log('📹 Registering video route at /api/video');
+app.use('/api/video', videoCallRoutes);
+console.log('✅ All routes registered');
 
 /* =========================
    Health Check
