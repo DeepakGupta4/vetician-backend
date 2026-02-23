@@ -424,7 +424,7 @@ const registerVeterinarian = catchAsync(async (req, res, next) => {
 
   // Check if userId exists in the request
   if (!flatData.userId) {
-    return res.status(400).json({  // Changed to return JSON response
+    return res.status(400).json({
       success: false,
       message: 'User ID is required'
     });
@@ -436,7 +436,7 @@ const registerVeterinarian = catchAsync(async (req, res, next) => {
   });
 
   if (existingVeterinarianByUserId) {
-    return res.status(400).json({  // Changed to return JSON response
+    return res.status(400).json({
       success: false,
       message: 'You have already applied for verification'
     });
@@ -448,9 +448,9 @@ const registerVeterinarian = catchAsync(async (req, res, next) => {
   });
 
   if (existingVeterinarianByReg) {
-    return res.status(400).json({  // Changed to return JSON response
+    return res.status(400).json({
       success: false,
-      message: 'A veterinarian with this registration number already exists.' // Note: Added period to match frontend check
+      message: 'A veterinarian with this registration number already exists.'
     });
   }
 
@@ -488,6 +488,44 @@ const registerVeterinarian = catchAsync(async (req, res, next) => {
     veterinarian: veterinarian.getPublicProfile(),
     token: accessToken,
     refreshToken
+  });
+});
+
+// update Veterinarian
+const updateVeterinarian = catchAsync(async (req, res, next) => {
+  const flatData = req.body;
+
+  if (!flatData.userId) {
+    return res.status(400).json({
+      success: false,
+      message: 'User ID is required'
+    });
+  }
+
+  const veterinarian = await Veterinarian.findOne({ userId: flatData.userId });
+
+  if (!veterinarian) {
+    return res.status(404).json({
+      success: false,
+      message: 'Veterinarian profile not found'
+    });
+  }
+
+  // Update fields
+  for (const [key, value] of Object.entries(flatData)) {
+    if (key === 'userId') continue;
+    
+    if (veterinarian[key]) {
+      veterinarian[key].value = key === 'experience' ? Number(value) : value;
+    }
+  }
+
+  await veterinarian.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Profile updated successfully',
+    veterinarian: veterinarian.getPublicProfile()
   });
 });
 
@@ -837,11 +875,18 @@ const getProfileDetails = catchAsync(async (req, res, next) => {
     message: veterinarian.isVerified ? 'Your profile has been verified' : 'Please give us 7 business days from the date of submission to review your profile',
     profile: {
       name: `${veterinarian.title.value} ${veterinarian.name.value}`,
+      title: veterinarian.title.value,
+      gender: veterinarian.gender.value,
+      city: veterinarian.city.value,
       specialization: veterinarian.specialization.value,
       qualification: veterinarian.qualification.value,
       experience: `${veterinarian.experience.value} years`,
       registration: veterinarian.registration.value,
+      identityProof: veterinarian.identityProof.value,
       profilePhotoUrl: veterinarian.profilePhotoUrl.value,
+      qualificationUrl: veterinarian.qualificationUrl.value,
+      registrationUrl: veterinarian.registrationUrl.value,
+      identityProofUrl: veterinarian.identityProofUrl.value,
       isVerified: veterinarian.isVerified
     },
     clinics: clinics.map(clinic => ({
@@ -1686,6 +1731,7 @@ module.exports = {
   updateUserPet,
   deleteUserPet,
   registerVeterinarian,
+  updateVeterinarian,
   getUnverifiedVeterinarians,
   getVerifiedVeterinarians,
   verifyVeterinarianField,

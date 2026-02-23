@@ -15,6 +15,7 @@ const {
   updateUserPet,
   deleteUserPet,
   registerVeterinarian,
+  updateVeterinarian,
   getUnverifiedVeterinarians,
   getVerifiedVeterinarians,
   verifyVeterinarianField,
@@ -144,6 +145,7 @@ router.post('/petparent/appointments/book', auth, createAppointment);
 ========================= */
 
 router.post('/veterinarian-register', registerVeterinarian);
+router.put('/veterinarian-update', updateVeterinarian);
 router.post('/check-veterinarian-verification', checkVeterinarianVerification);
 
 router.post('/admin/verified', getVerifiedVeterinarians);
