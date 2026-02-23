@@ -158,7 +158,7 @@ router.post('/register-clinic', registerClinic);
 router.post('/admin/unverified/clinic', getUnverifiedClinics);
 router.post('/admin/verified/clinic', getVerifiedClinics);
 router.post('/admin/clinic/verify/:clinicId', verifyClinic);
-router.post('/veterinarian/profile-screen', getProfileDetails);
+router.get('/veterinarian/:userId', getProfileDetails);
 
 /* =========================
    PET RESORT

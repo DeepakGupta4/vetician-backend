@@ -1,5 +1,6 @@
 const User = require('../models/User');
-const Veterinarian = require('../models/Veterinarian')
+const Veterinarian = require('../models/Veterinarian');
+const Appointment = require('../models/Appointment');
 const { AppError } = require('../utils/appError');
 const { catchAsync } = require('../utils/catchAsync');
 
@@ -85,24 +86,39 @@ const getDashboardStats = catchAsync(async (req, res, next) => {
     });
   }
 
+  const veterinarianId = req.user.userId;
   
+  const [appointmentsCount, surgeriesCount] = await Promise.all([
+    Appointment.countDocuments({ veterinarianId }),
+    Appointment.countDocuments({ veterinarianId, illness: /surgery/i })
+  ]);
+
+  const uniquePatients = await Appointment.distinct('userId', { veterinarianId });
+
   const stats = {
-    patients: 24, // Placeholder: await Patient.countDocuments({ vetId: req.user._id })
-    appointments: 12,
-    surgeries: 3,
+    patients: uniquePatients.length,
+    appointments: appointmentsCount,
+    surgeries: surgeriesCount,
   };
 
-  // 3. Recent activities/patients fetch karein
-  const recentPatients = [
-    { id: '1', name: 'Max', breed: 'Golden Retriever', time: '10:00 AM', status: 'Annual checkup' },
-    { id: '2', name: 'Whiskers', breed: 'Persian Cat', time: '11:30 AM', status: 'Vaccination' },
-    { id: '3', name: 'Rocky', breed: 'German Shepherd', time: '2:00 PM', status: 'Post-op' },
-  ];
+  const recentAppointments = await Appointment.find({ veterinarianId })
+    .sort({ date: -1 })
+    .limit(3)
+    .lean();
+
+  const recentPatients = recentAppointments.map(apt => ({
+    id: apt._id,
+    name: apt.petName,
+    breed: apt.breed || apt.petType,
+    time: new Date(apt.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    status: apt.illness || 'Checkup'
+  }));
 
   res.status(200).json({
     success: true,
     stats,
-    recentPatients
+    recentPatients,
+    notifications: { unreadCount: 0 }
   });
 });
 

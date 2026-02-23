@@ -812,8 +812,7 @@ const verifyClinic = catchAsync(async (req, res, next) => {
 
 // get profile screen data
 const getProfileDetails = catchAsync(async (req, res, next) => {
-  const { userId } = req.body;
-  console.log(req.body)
+  const { userId } = req.params;
 
   if (!userId) {
     return next(new AppError('User ID is required', 400));
@@ -825,23 +824,23 @@ const getProfileDetails = catchAsync(async (req, res, next) => {
     Clinic.find({ userId })
   ]);
 
-  // console.log(veterinarian, clinics)
-
   if (!veterinarian) {
-    return next(new AppError('No veterinarian found with that user ID', 404));
+    return res.status(200).json({
+      success: true,
+      data: null
+    });
   }
 
-  // Format the response similar to your example image
+  // Format the response
   const profileData = {
-    status: 'Your profile is under review',
-    message: 'Please give us 7 business days from the date of submission to review your profile',
+    status: veterinarian.isVerified ? 'Profile verified' : 'Your profile is under review',
+    message: veterinarian.isVerified ? 'Your profile has been verified' : 'Please give us 7 business days from the date of submission to review your profile',
     profile: {
       name: `${veterinarian.title.value} ${veterinarian.name.value}`,
       specialization: veterinarian.specialization.value,
       qualification: veterinarian.qualification.value,
-      experience: `${veterinarian.experience.value} years of experience`,
+      experience: `${veterinarian.experience.value} years`,
       registration: veterinarian.registration.value,
-      additionalCertification: 'Arizona State Board of Dental Examiners-2003', // This would come from your data
       profilePhotoUrl: veterinarian.profilePhotoUrl.value,
       isVerified: veterinarian.isVerified
     },
