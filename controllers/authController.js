@@ -31,7 +31,10 @@ const generateTokens = (userId) => {
 
 // Register new user
 const register = catchAsync(async (req, res, next) => {
-  const { name, email, phone, password, role = 'vetician' } = req.body;
+  const { name, email, phone, password, loginType, role } = req.body;
+  
+  // Use loginType if provided, otherwise fall back to role, default to 'vetician'
+  const userRole = loginType || role || 'vetician';
   
   if (!name || !email || !password) {
     return next(new AppError('Name, email, and password are required', 400));
@@ -41,17 +44,17 @@ const register = catchAsync(async (req, res, next) => {
     return next(new AppError('Phone number is required', 400));
   }
 
-  if (role && !['veterinarian', 'vetician', 'paravet', 'pet_resort'].includes(role)) {
+  if (userRole && !['veterinarian', 'vetician', 'paravet', 'pet_resort'].includes(userRole)) {
     return next(new AppError('Invalid role specified', 400));
   }
 
   const existingUser = await User.findOne({
     email: email.toLowerCase().trim(),
-    role
+    role: userRole
   });
 
   if (existingUser) {
-    return next(new AppError(`User with this email already exists as a ${role}`, 400));
+    return next(new AppError(`User with this email already exists as a ${userRole}`, 400));
   }
 
   const user = new User({
@@ -59,13 +62,13 @@ const register = catchAsync(async (req, res, next) => {
     email: email.toLowerCase().trim(),
     phone: phone.trim(),
     password,
-    role
+    role: userRole
   });
 
   await user.save();
 
   try {
-    if (role === 'vetician') {
+    if (userRole === 'vetician') {
       const parent = new Parent({
         name: user.name,
         email: user.email,
@@ -73,7 +76,7 @@ const register = catchAsync(async (req, res, next) => {
         gender: 'other'
       });
       await parent.save();
-    } else if (role === 'paravet') {
+    } else if (userRole === 'paravet') {
       const paravet = new Paravet({
         userId: user._id.toString(),
         personalInfo: {
