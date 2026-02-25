@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Veterinarian = require('../models/Veterinarian');
 const Appointment = require('../models/Appointment');
+const Surgery = require('../models/Surgery');
 const { AppError } = require('../utils/appError');
 const { catchAsync } = require('../utils/catchAsync');
 
@@ -90,7 +91,7 @@ const getDashboardStats = catchAsync(async (req, res, next) => {
   
   const [appointmentsCount, surgeriesCount] = await Promise.all([
     Appointment.countDocuments({ veterinarianId }),
-    Appointment.countDocuments({ veterinarianId, illness: /surgery/i })
+    Surgery.countDocuments({ veterinarianId })
   ]);
 
   const uniquePatients = await Appointment.distinct('userId', { veterinarianId });
@@ -101,23 +102,9 @@ const getDashboardStats = catchAsync(async (req, res, next) => {
     surgeries: surgeriesCount,
   };
 
-  const recentAppointments = await Appointment.find({ veterinarianId })
-    .sort({ date: -1 })
-    .limit(3)
-    .lean();
-
-  const recentPatients = recentAppointments.map(apt => ({
-    id: apt._id,
-    name: apt.petName,
-    breed: apt.breed || apt.petType,
-    time: new Date(apt.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-    status: apt.illness || 'Checkup'
-  }));
-
   res.status(200).json({
     success: true,
     stats,
-    recentPatients,
     notifications: { unreadCount: 0 }
   });
 });
