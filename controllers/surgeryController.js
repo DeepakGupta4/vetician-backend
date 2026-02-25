@@ -2,7 +2,7 @@ const Surgery = require('../models/Surgery');
 
 exports.getSurgeries = async (req, res) => {
   try {
-    const veterinarianId = req.user.userId;
+    const veterinarianId = req.user._id || req.user.userId;
     const surgeries = await Surgery.find({ veterinarianId }).sort({ date: -1 });
 
     res.json({ success: true, surgeries });
@@ -13,7 +13,7 @@ exports.getSurgeries = async (req, res) => {
 
 exports.createSurgery = async (req, res) => {
   try {
-    const veterinarianId = req.user.userId;
+    const veterinarianId = req.user._id || req.user.userId;
     const { name, date, hospital, notes } = req.body;
 
     const surgery = await Surgery.create({
@@ -33,7 +33,7 @@ exports.createSurgery = async (req, res) => {
 exports.updateSurgery = async (req, res) => {
   try {
     const { id } = req.params;
-    const veterinarianId = req.user.userId;
+    const veterinarianId = req.user._id || req.user.userId;
 
     const surgery = await Surgery.findOneAndUpdate(
       { _id: id, veterinarianId },
@@ -54,7 +54,7 @@ exports.updateSurgery = async (req, res) => {
 exports.deleteSurgery = async (req, res) => {
   try {
     const { id } = req.params;
-    const veterinarianId = req.user.userId;
+    const veterinarianId = req.user._id || req.user.userId;
 
     const surgery = await Surgery.findOneAndDelete({ _id: id, veterinarianId });
 

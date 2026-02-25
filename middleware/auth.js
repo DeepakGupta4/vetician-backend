@@ -32,6 +32,7 @@ const auth = catchAsync(async (req, res, next) => {
       return next(new AppError('User recently changed password. Please log in again.', 401));
     }
     req.user = user;
+    req.user.userId = user._id;
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

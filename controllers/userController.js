@@ -87,7 +87,7 @@ const getDashboardStats = catchAsync(async (req, res, next) => {
     });
   }
 
-  const veterinarianId = req.user.userId;
+  const veterinarianId = req.user._id || req.user.userId;
   
   const [appointmentsCount, surgeriesCount] = await Promise.all([
     Appointment.countDocuments({ veterinarianId }),
