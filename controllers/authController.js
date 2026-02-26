@@ -1718,6 +1718,39 @@ const verifyOTP = catchAsync(async (req, res, next) => {
   });
 });
 
+// Unverify veterinarian (admin)
+const unverifyVeterinarian = catchAsync(async (req, res, next) => {
+  const { veterinarianId } = req.params;
+
+  const veterinarian = await Veterinarian.findById(veterinarianId);
+  if (!veterinarian) {
+    return next(new AppError('Veterinarian not found', 404));
+  }
+
+  veterinarian.isVerified = false;
+  await veterinarian.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Veterinarian unverified successfully'
+  });
+});
+
+// Delete veterinarian (admin)
+const deleteVeterinarian = catchAsync(async (req, res, next) => {
+  const { veterinarianId } = req.params;
+
+  const veterinarian = await Veterinarian.findByIdAndDelete(veterinarianId);
+  if (!veterinarian) {
+    return next(new AppError('Veterinarian not found', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Veterinarian deleted successfully'
+  });
+});
+
 module.exports = {
   register,
   login,
@@ -1752,5 +1785,7 @@ module.exports = {
   getPetsByUserId,
   deleteAccount,
   sendOTP,
-  verifyOTP
+  verifyOTP,
+  unverifyVeterinarian,
+  deleteVeterinarian
 };

@@ -35,7 +35,9 @@ const {
   getPetsByUserId,
   deleteAccount,
   sendOTP,
-  verifyOTP
+  verifyOTP,
+  unverifyVeterinarian,
+  deleteVeterinarian
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -151,6 +153,8 @@ router.post('/check-veterinarian-verification', checkVeterinarianVerification);
 router.post('/admin/verified', getVerifiedVeterinarians);
 router.post('/admin/unverified', getUnverifiedVeterinarians);
 router.patch('/verify/:veterinarianId/:fieldName', verifyVeterinarianField);
+router.patch('/unverify/:veterinarianId', unverifyVeterinarian);
+router.delete('/veterinarian/:veterinarianId', deleteVeterinarian);
 
 /* =========================
    CLINIC
