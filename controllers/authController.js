@@ -638,8 +638,9 @@ const verifyVeterinarianField = catchAsync(async (req, res, next) => {
   const requiredFields = [
     'name', 'gender', 'city',
     'experience', 'specialization',
-    'qualification', 'registration',
-    'identityProof'
+    'qualification', 'qualificationUrl',
+    'registration', 'registrationUrl',
+    'identityProofUrl', 'profilePhotoUrl'
   ];
 
   const allVerified = requiredFields.every(field => {
