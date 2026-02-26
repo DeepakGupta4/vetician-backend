@@ -37,7 +37,9 @@ const {
   sendOTP,
   verifyOTP,
   unverifyVeterinarian,
-  deleteVeterinarian
+  deleteVeterinarian,
+  unverifyClinic,
+  deleteClinic
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -164,6 +166,8 @@ router.post('/register-clinic', registerClinic);
 router.post('/admin/unverified/clinic', getUnverifiedClinics);
 router.post('/admin/verified/clinic', getVerifiedClinics);
 router.post('/admin/clinic/verify/:clinicId', verifyClinic);
+router.post('/admin/clinic/unverify/:clinicId', unverifyClinic);
+router.delete('/clinic/:clinicId', deleteClinic);
 router.get('/veterinarian/:userId', getProfileDetails);
 
 /* =========================

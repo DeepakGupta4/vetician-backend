@@ -849,6 +849,39 @@ const verifyClinic = catchAsync(async (req, res, next) => {
   });
 });
 
+// Unverify Clinic (admin)
+const unverifyClinic = catchAsync(async (req, res, next) => {
+  const { clinicId } = req.params;
+
+  const clinic = await Clinic.findById(clinicId);
+  if (!clinic) {
+    return next(new AppError('Clinic not found', 404));
+  }
+
+  clinic.verified = false;
+  await clinic.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Clinic unverified successfully'
+  });
+});
+
+// Delete Clinic (admin)
+const deleteClinic = catchAsync(async (req, res, next) => {
+  const { clinicId } = req.params;
+
+  const clinic = await Clinic.findByIdAndDelete(clinicId);
+  if (!clinic) {
+    return next(new AppError('Clinic not found', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Clinic deleted successfully'
+  });
+});
+
 // get profile screen data
 const getProfileDetails = catchAsync(async (req, res, next) => {
   const { userId } = req.params;
@@ -1803,5 +1836,7 @@ module.exports = {
   sendOTP,
   verifyOTP,
   unverifyVeterinarian,
-  deleteVeterinarian
+  deleteVeterinarian,
+  unverifyClinic,
+  deleteClinic
 };
