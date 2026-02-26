@@ -1800,6 +1800,47 @@ const deleteVeterinarian = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get veterinarian details by ID (admin)
+const getVeterinarianById = catchAsync(async (req, res, next) => {
+  const { veterinarianId } = req.params;
+
+  const veterinarian = await Veterinarian.findById(veterinarianId);
+  if (!veterinarian) {
+    return next(new AppError('Veterinarian not found', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    veterinarian
+  });
+});
+
+// Update veterinarian by ID (admin)
+const updateVeterinarianById = catchAsync(async (req, res, next) => {
+  const { veterinarianId } = req.params;
+  const updates = req.body;
+
+  const veterinarian = await Veterinarian.findById(veterinarianId);
+  if (!veterinarian) {
+    return next(new AppError('Veterinarian not found', 404));
+  }
+
+  // Update fields
+  Object.keys(updates).forEach(key => {
+    if (veterinarian[key] && typeof veterinarian[key] === 'object' && veterinarian[key].value !== undefined) {
+      veterinarian[key].value = key === 'experience' ? Number(updates[key]) : updates[key];
+    }
+  });
+
+  await veterinarian.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Veterinarian updated successfully',
+    veterinarian
+  });
+});
+
 module.exports = {
   register,
   login,
@@ -1838,5 +1879,7 @@ module.exports = {
   unverifyVeterinarian,
   deleteVeterinarian,
   unverifyClinic,
-  deleteClinic
+  deleteClinic,
+  getVeterinarianById,
+  updateVeterinarianById
 };

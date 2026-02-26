@@ -39,7 +39,9 @@ const {
   unverifyVeterinarian,
   deleteVeterinarian,
   unverifyClinic,
-  deleteClinic
+  deleteClinic,
+  getVeterinarianById,
+  updateVeterinarianById
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -157,6 +159,8 @@ router.post('/admin/unverified', getUnverifiedVeterinarians);
 router.patch('/verify/:veterinarianId/:fieldName', verifyVeterinarianField);
 router.patch('/unverify/:veterinarianId', unverifyVeterinarian);
 router.delete('/veterinarian/:veterinarianId', deleteVeterinarian);
+router.get('/veterinarian/details/:veterinarianId', getVeterinarianById);
+router.put('/veterinarian/:veterinarianId', updateVeterinarianById);
 
 /* =========================
    CLINIC
