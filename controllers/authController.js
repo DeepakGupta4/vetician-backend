@@ -1727,7 +1727,23 @@ const unverifyVeterinarian = catchAsync(async (req, res, next) => {
     return next(new AppError('Veterinarian not found', 404));
   }
 
+  // Set isVerified to false
   veterinarian.isVerified = false;
+  
+  // Optionally unverify all fields (so admin can re-verify)
+  const fieldsToUnverify = [
+    'name', 'gender', 'city', 'experience',
+    'specialization', 'qualification', 'qualificationUrl',
+    'registration', 'registrationUrl',
+    'identityProofUrl', 'profilePhotoUrl'
+  ];
+  
+  fieldsToUnverify.forEach(field => {
+    if (veterinarian[field]) {
+      veterinarian[field].verified = false;
+    }
+  });
+  
   await veterinarian.save();
 
   res.status(200).json({
