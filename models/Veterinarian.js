@@ -218,10 +218,10 @@ veterinarianSchema.methods.getPublicProfile = function() {
 
 veterinarianSchema.methods.checkAllVerified = function() {
   const fields = [
-    'title', 'name', 'gender', 'city', 'experience',
-    'specialization', 'profilePhotoUrl', 'qualification',
-    'qualificationUrl', 'registration', 'registrationUrl',
-    'identityProof', 'identityProofUrl'
+    'name', 'gender', 'city', 'experience',
+    'specialization', 'qualification', 'qualificationUrl',
+    'registration', 'registrationUrl',
+    'identityProofUrl', 'profilePhotoUrl'
   ];
   
   return fields.every(field => this[field]?.verified === true);
