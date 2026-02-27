@@ -122,6 +122,16 @@ io.on('connection', (socket) => {
     console.log(`👤 User ${userId} joined`);
   });
 
+  socket.on('join-veterinarian', (vetId) => {
+    socket.join(`vet-${vetId}`);
+    console.log(`🩺 Veterinarian ${vetId} joined`);
+  });
+
+  socket.on('join-petparent', (userId) => {
+    socket.join(`petparent-${userId}`);
+    console.log(`🐾 Pet Parent ${userId} joined`);
+  });
+
   socket.on('disconnect', () => {
     console.log('❌ Client disconnected:', socket.id);
   });

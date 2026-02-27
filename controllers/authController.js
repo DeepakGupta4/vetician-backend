@@ -1497,8 +1497,9 @@ const createAppointment = catchAsync(async (req, res, next) => {
   }
 
   // 4. Validate veterinarian exists if provided
+  let veterinarian;
   if (veterinarianId) {
-    const veterinarian = await Veterinarian.findById(veterinarianId);
+    veterinarian = await Veterinarian.findById(veterinarianId);
     if (!veterinarian) {
       return next(new AppError('No veterinarian found with that ID', 404));
     }
@@ -1520,7 +1521,20 @@ const createAppointment = catchAsync(async (req, res, next) => {
     status: 'pending' // Default status
   });
 
-  // 6. Format the response data similar to your clinic/vet format
+  // 6. Emit real-time notification to veterinarian
+  const io = req.app.get('io');
+  if (io && veterinarianId) {
+    io.to(`vet-${veterinarianId}`).emit('new-appointment', {
+      appointmentId: newAppointment._id,
+      petName: newAppointment.petName,
+      petType: newAppointment.petType,
+      date: newAppointment.date,
+      bookingType: newAppointment.bookingType,
+      message: `New ${bookingType} appointment for ${petName}`
+    });
+  }
+
+  // 7. Format the response data similar to your clinic/vet format
   const responseData = {
     appointmentDetails: {
       _id: newAppointment._id,
@@ -1879,6 +1893,17 @@ const updateAppointmentStatus = catchAsync(async (req, res, next) => {
 
   appointment.status = status;
   await appointment.save();
+
+  // Emit real-time notification to pet parent
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`petparent-${appointment.userId}`).emit('appointment-status-update', {
+      appointmentId: appointment._id,
+      status: appointment.status,
+      petName: appointment.petName,
+      message: `Your appointment for ${appointment.petName} has been ${status}`
+    });
+  }
 
   res.status(200).json({
     success: true,
