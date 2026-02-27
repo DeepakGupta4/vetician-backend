@@ -48,6 +48,7 @@ const patientRoutes = require('./routes/patientRoutes');
 const surgeryRoutes = require('./routes/surgeryRoutes');
 console.log('📹 Loading video call routes...');
 const videoCallRoutes = require('./routes/videoCall');
+const veterinariansRoutes = require('./routes/veterinarians');
 console.log('✅ All routes loaded');
 const { errorHandler } = require('./middleware/errorHandler');
 
@@ -83,6 +84,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/surgeries', surgeryRoutes);
 console.log('📹 Registering video route at /api/video');
 app.use('/api/video', videoCallRoutes);
+app.use('/api/veterinarians', veterinariansRoutes);
 console.log('✅ All routes registered');
 
 /* =========================

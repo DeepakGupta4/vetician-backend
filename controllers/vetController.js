@@ -456,6 +456,7 @@ const getProfileDetails = catchAsync(async (req, res, next) => {
 const getAllClinicsWithVets = catchAsync(async (req, res, next) => {
   // Get user's location from query params
   const { userLat, userLon } = req.query;
+  console.log(`🔍 API called with userLat: ${userLat}, userLon: ${userLon}`);
   
   // 1. Fetch all verified clinics
   const clinics = await Clinic.find({ verified: true }).lean();
@@ -547,7 +548,7 @@ const getAllClinicsWithVets = catchAsync(async (req, res, next) => {
     });
   }
   
-  console.log(responseData)
+  console.log(`✅ Sending ${responseData.length} clinics with distances`);
 
   res.status(200).json({
     success: true,
