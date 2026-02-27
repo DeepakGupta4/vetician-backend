@@ -158,6 +158,21 @@ io.on('connection', (socket) => {
     console.log(`📴 Call ended: ${data.callId}`);
   });
 
+  // WebRTC signaling
+  socket.on('offer', (data) => {
+    socket.to(data.roomName).emit('offer', data);
+    console.log(`📤 Offer sent to room: ${data.roomName}`);
+  });
+
+  socket.on('answer', (data) => {
+    socket.to(data.roomName).emit('answer', data);
+    console.log(`📤 Answer sent to room: ${data.roomName}`);
+  });
+
+  socket.on('ice-candidate', (data) => {
+    socket.to(data.roomName).emit('ice-candidate', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('❌ Client disconnected:', socket.id);
   });
