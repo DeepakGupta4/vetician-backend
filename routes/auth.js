@@ -44,7 +44,9 @@ const {
   updateVeterinarianById,
   getVeterinarianAppointments,
   updateAppointmentStatus,
-  getPetParentAppointments
+  getPetParentAppointments,
+  getNotifications,
+  markNotificationRead
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -151,6 +153,13 @@ router.post('/petparent/appointments/book', auth, createAppointment);
 router.get('/petparent/appointments', auth, getPetParentAppointments);
 router.get('/veterinarian/appointments', auth, getVeterinarianAppointments);
 router.patch('/appointment/:appointmentId/status', auth, updateAppointmentStatus);
+
+/* =========================
+   NOTIFICATIONS
+========================= */
+
+router.get('/notifications', auth, getNotifications);
+router.patch('/notifications/:notificationId/read', auth, markNotificationRead);
 
 /* =========================
    VETERINARIAN

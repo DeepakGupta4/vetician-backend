@@ -9,6 +9,7 @@ const { AppError } = require('../utils/appError');
 const { catchAsync } = require('../utils/catchAsync');
 const PetResort = require('../models/PetResort');
 const Appointment = require('../models/Appointment');
+const Notification = require('../models/Notification');
 const { getCoordinatesFromAddress } = require('../utils/geocoding');
 
 
@@ -1521,28 +1522,28 @@ const createAppointment = catchAsync(async (req, res, next) => {
     status: 'pending' // Default status
   });
 
-  // 6. Emit real-time notification to veterinarian
-  const io = req.app.get('io');
-  console.log('🔔 Attempting to send notification...');
-  console.log('IO exists:', !!io);
-  console.log('Veterinarian ID:', veterinarianId);
-  console.log('Room name:', `vet-${veterinarianId}`);
-  
-  if (io && veterinarianId) {
-    const notificationData = {
-      appointmentId: newAppointment._id,
-      petName: newAppointment.petName,
-      petType: newAppointment.petType,
-      date: newAppointment.date,
-      bookingType: newAppointment.bookingType,
-      message: `New ${bookingType} appointment for ${petName}`
-    };
-    
-    console.log('📤 Emitting notification:', notificationData);
-    io.to(`vet-${veterinarianId}`).emit('new-appointment', notificationData);
-    console.log('✅ Notification sent to room:', `vet-${veterinarianId}`);
-  } else {
-    console.log('❌ Cannot send notification - IO:', !!io, 'VetID:', veterinarianId);
+  // 6. Save notification to database and emit real-time notification
+  if (veterinarianId) {
+    const notification = await Notification.create({
+      userId: veterinarianId,
+      userType: 'Veterinarian',
+      title: 'New Appointment',
+      message: `New ${bookingType} appointment for ${petName}`,
+      type: 'appointment',
+      relatedId: newAppointment._id
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`vet-${veterinarianId}`).emit('new-appointment', {
+        appointmentId: newAppointment._id,
+        petName: newAppointment.petName,
+        petType: newAppointment.petType,
+        date: newAppointment.date,
+        bookingType: newAppointment.bookingType,
+        message: `New ${bookingType} appointment for ${petName}`
+      });
+    }
   }
 
   // 7. Format the response data similar to your clinic/vet format
@@ -1905,7 +1906,16 @@ const updateAppointmentStatus = catchAsync(async (req, res, next) => {
   appointment.status = status;
   await appointment.save();
 
-  // Emit real-time notification to pet parent
+  // Save notification to database and emit real-time notification
+  const notification = await Notification.create({
+    userId: appointment.userId,
+    userType: 'User',
+    title: 'Appointment Update',
+    message: `Your appointment for ${appointment.petName} has been ${status}`,
+    type: 'status_update',
+    relatedId: appointment._id
+  });
+
   const io = req.app.get('io');
   if (io) {
     io.to(`petparent-${appointment.userId}`).emit('appointment-status-update', {
@@ -1941,6 +1951,43 @@ const getPetParentAppointments = catchAsync(async (req, res, next) => {
   } catch (error) {
     return next(new AppError('Failed to fetch appointments', 500));
   }
+});
+
+// Get notifications for user
+const getNotifications = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const { userType } = req.query;
+
+  const notifications = await Notification.find({ 
+    userId,
+    ...(userType && { userType })
+  }).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    count: notifications.length,
+    notifications
+  });
+});
+
+// Mark notification as read
+const markNotificationRead = catchAsync(async (req, res, next) => {
+  const { notificationId } = req.params;
+
+  const notification = await Notification.findByIdAndUpdate(
+    notificationId,
+    { isRead: true },
+    { new: true }
+  );
+
+  if (!notification) {
+    return next(new AppError('Notification not found', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    notification
+  });
 });
 
 module.exports = {
@@ -1986,5 +2033,7 @@ module.exports = {
   updateVeterinarianById,
   getVeterinarianAppointments,
   updateAppointmentStatus,
-  getPetParentAppointments
+  getPetParentAppointments,
+  getNotifications,
+  markNotificationRead
 };
