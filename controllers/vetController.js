@@ -470,6 +470,8 @@ const getAllClinicsWithVets = catchAsync(async (req, res, next) => {
         city: clinic.city,
         locality: clinic.locality,
         streetAddress: clinic.streetAddress,
+        latitude: clinic.latitude,
+        longitude: clinic.longitude,
         fees: clinic.fees,
         timings: clinic.timings,
         verified: clinic.verified,
