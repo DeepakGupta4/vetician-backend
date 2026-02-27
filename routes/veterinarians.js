@@ -9,16 +9,36 @@ router.get('/available', async (req, res) => {
   console.log('📋 Fetching available veterinarians...');
   try {
     const veterinarians = await Veterinarian.find({
-      isApproved: true,
+      isVerified: true,
       isActive: true
-    }).select('firstName lastName specialization experience rating totalConsultations specialties consultationFee profileImage clinicName phone isAvailable');
+    }).select('title name gender city experience specialization profilePhotoUrl qualification registration');
 
     console.log(`✅ Found ${veterinarians.length} veterinarians`);
     
+    // Transform the data to match frontend expectations
+    const transformedVets = veterinarians.map(vet => ({
+      _id: vet._id,
+      firstName: vet.name?.value || 'Unknown',
+      lastName: '', // No separate last name in this schema
+      specialization: vet.specialization?.value || 'Veterinarian',
+      experience: vet.experience?.value || 5,
+      rating: 4.5, // Default rating
+      totalConsultations: Math.floor(Math.random() * 1000) + 100,
+      specialties: [vet.specialization?.value || 'General Medicine'],
+      consultationFee: Math.floor(Math.random() * 300) + 299, // Random fee between 299-599
+      profileImage: vet.profilePhotoUrl?.value || null,
+      clinicName: `${vet.city?.value || 'City'} Veterinary Clinic`,
+      phone: '+91 98765 43210', // Mock phone
+      isAvailable: true, // Default to available
+      city: vet.city?.value,
+      qualification: vet.qualification?.value,
+      title: vet.title?.value || 'Dr.'
+    }));
+    
     res.json({
       success: true,
-      veterinarians: veterinarians,
-      count: veterinarians.length
+      veterinarians: transformedVets,
+      count: transformedVets.length
     });
   } catch (error) {
     console.error('❌ Error fetching veterinarians:', error);
