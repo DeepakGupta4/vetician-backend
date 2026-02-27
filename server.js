@@ -49,6 +49,7 @@ const surgeryRoutes = require('./routes/surgeryRoutes');
 console.log('📹 Loading video call routes...');
 const videoCallRoutes = require('./routes/videoCall');
 const veterinariansRoutes = require('./routes/veterinarians');
+const callRoutes = require('./routes/call');
 console.log('✅ All routes loaded');
 const { errorHandler } = require('./middleware/errorHandler');
 
@@ -85,6 +86,7 @@ app.use('/api/surgeries', surgeryRoutes);
 console.log('📹 Registering video route at /api/video');
 app.use('/api/video', videoCallRoutes);
 app.use('/api/veterinarians', veterinariansRoutes);
+app.use('/api/call', callRoutes);
 console.log('✅ All routes registered');
 
 /* =========================
@@ -125,14 +127,35 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join-veterinarian', (vetId) => {
-    socket.join(`vet-${vetId}`);
-    console.log(`🩺 Veterinarian ${vetId} joined room: vet-${vetId}`);
-    console.log(`📊 Active rooms for socket ${socket.id}:`, Array.from(socket.rooms));
+    socket.join(vetId);  // Join without prefix
+    console.log(`🩺 Veterinarian ${vetId} joined room: ${vetId}`);
+    console.log(`📊 Active rooms:`, Array.from(socket.rooms));
   });
 
   socket.on('join-petparent', (userId) => {
-    socket.join(`petparent-${userId}`);
-    console.log(`🐾 Pet Parent ${userId} joined`);
+    socket.join(userId);  // Join without prefix
+    console.log(`🐾 Pet Parent ${userId} joined room: ${userId}`);
+    console.log(`📊 Active rooms:`, Array.from(socket.rooms));
+  });
+
+  socket.on('call-response', (data) => {
+    console.log('📞 Call response received:', data);
+    if (data.accepted) {
+      io.emit('call-accepted', data);
+    } else {
+      io.emit('call-rejected', data);
+    }
+  });
+
+  socket.on('join-call', (data) => {
+    socket.join(data.roomName);
+    socket.to(data.roomName).emit('user-joined', data);
+    console.log(`👥 User joined call room: ${data.roomName}`);
+  });
+
+  socket.on('end-call', (data) => {
+    io.to(data.roomName).emit('call-ended', data);
+    console.log(`📴 Call ended: ${data.callId}`);
   });
 
   socket.on('disconnect', () => {
