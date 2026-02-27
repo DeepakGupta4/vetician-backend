@@ -482,6 +482,10 @@ const getAllClinicsWithVets = catchAsync(async (req, res, next) => {
   const responseData = clinics.map(clinic => {
     const vet = vetMap[clinic.userId] || null;
     
+    console.log(`🏥 Processing clinic: ${clinic.clinicName}`);
+    console.log(`📍 DB Coordinates: lat=${clinic.latitude}, lon=${clinic.longitude}`);
+    console.log(`👤 User Location: lat=${userLat}, lon=${userLon}`);
+    
     // Calculate distance if user location and clinic coordinates are available
     let distance = null;
     if (userLat && userLon && clinic.latitude && clinic.longitude) {
@@ -491,6 +495,9 @@ const getAllClinicsWithVets = catchAsync(async (req, res, next) => {
         clinic.latitude, 
         clinic.longitude
       );
+      console.log(`📏 Calculated distance: ${distance} km`);
+    } else {
+      console.log(`⚠️ Missing coordinates - userLat: ${userLat}, userLon: ${userLon}, clinicLat: ${clinic.latitude}, clinicLon: ${clinic.longitude}`);
     }
     
     return {
