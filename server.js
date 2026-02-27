@@ -141,11 +141,21 @@ io.on('connection', (socket) => {
   socket.on('call-response', (data) => {
     console.log('📞 Call response received:', data);
     if (data.accepted) {
+      // Extract callerId from roomName (format: room-callerId-receiverId-timestamp)
+      const roomParts = data.roomName.split('-');
+      const callerId = roomParts[1];
+      
+      // Emit to both room and caller's user room
       io.to(data.roomName).emit('call-accepted', data);
-      console.log(`✅ Call accepted event sent to room: ${data.roomName}`);
+      io.to(callerId).emit('call-accepted', data);
+      console.log(`✅ Call accepted event sent to room: ${data.roomName} and caller: ${callerId}`);
     } else {
+      const roomParts = data.roomName.split('-');
+      const callerId = roomParts[1];
+      
       io.to(data.roomName).emit('call-rejected', data);
-      console.log(`❌ Call rejected event sent to room: ${data.roomName}`);
+      io.to(callerId).emit('call-rejected', data);
+      console.log(`❌ Call rejected event sent to room: ${data.roomName} and caller: ${callerId}`);
     }
   });
 
