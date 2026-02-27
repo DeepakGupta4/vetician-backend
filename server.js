@@ -179,12 +179,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('answer', (data) => {
-    socket.to(data.roomName).emit('answer', data);
+    io.to(data.roomName).emit('answer', data);
     console.log(`📤 Answer sent to room: ${data.roomName}`);
   });
 
   socket.on('ice-candidate', (data) => {
-    socket.to(data.roomName).emit('ice-candidate', data);
+    io.to(data.roomName).emit('ice-candidate', data);
   });
 
   socket.on('disconnect', () => {
