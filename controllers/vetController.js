@@ -349,11 +349,12 @@ const getVerifiedClinics = catchAsync(async (req, res, next) => {
   const vetMap = new Map();
   veterinarians.forEach(vet => {
     vetMap.set(vet.userId, {
+      vetId: vet._id.toString(),
       name: vet.name.value,
       title: vet.title.value,
       specialization: vet.specialization.value,
       experience: vet.experience.value,
-      profilePhotoUrl: vet.profilePhotoUrl.value, // Changed from profilePhoto to profilePhotoUrl
+      profilePhotoUrl: vet.profilePhotoUrl.value,
       isVerified: vet.isVerified
     });
   });
