@@ -43,7 +43,8 @@ const {
   getVeterinarianById,
   updateVeterinarianById,
   getVeterinarianAppointments,
-  updateAppointmentStatus
+  updateAppointmentStatus,
+  getPetParentAppointments
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -147,6 +148,7 @@ router.delete('/users/:userId/pets/:petId', deleteUserPet);
 ========================= */
 
 router.post('/petparent/appointments/book', auth, createAppointment);
+router.get('/petparent/appointments', auth, getPetParentAppointments);
 router.get('/veterinarian/appointments', auth, getVeterinarianAppointments);
 router.patch('/appointment/:appointmentId/status', auth, updateAppointmentStatus);
 

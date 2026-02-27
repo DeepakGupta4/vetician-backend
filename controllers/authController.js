@@ -1887,6 +1887,26 @@ const updateAppointmentStatus = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get pet parent appointments
+const getPetParentAppointments = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    
+    // Get all appointments for this user
+    const appointments = await Appointment.find({ 
+      userId 
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: appointments.length,
+      appointments
+    });
+  } catch (error) {
+    return next(new AppError('Failed to fetch appointments', 500));
+  }
+});
+
 module.exports = {
   register,
   login,
@@ -1929,5 +1949,6 @@ module.exports = {
   getVeterinarianById,
   updateVeterinarianById,
   getVeterinarianAppointments,
-  updateAppointmentStatus
+  updateAppointmentStatus,
+  getPetParentAppointments
 };
