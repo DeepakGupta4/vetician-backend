@@ -111,7 +111,7 @@ app.post('/api/test', (req, res) => {
 app.use(errorHandler);
 
 /* =========================
-   Socket.io Connection
+   Socket.io Connection (Updated)
 ========================= */
 io.on('connection', (socket) => {
   console.log('✅ Client connected:', socket.id);
