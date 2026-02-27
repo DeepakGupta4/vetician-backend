@@ -41,7 +41,9 @@ const {
   unverifyClinic,
   deleteClinic,
   getVeterinarianById,
-  updateVeterinarianById
+  updateVeterinarianById,
+  getVeterinarianAppointments,
+  updateAppointmentStatus
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -145,6 +147,8 @@ router.delete('/users/:userId/pets/:petId', deleteUserPet);
 ========================= */
 
 router.post('/petparent/appointments/book', auth, createAppointment);
+router.get('/veterinarian/appointments', auth, getVeterinarianAppointments);
+router.patch('/appointment/:appointmentId/status', auth, updateAppointmentStatus);
 
 /* =========================
    VETERINARIAN

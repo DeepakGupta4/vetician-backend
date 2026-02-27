@@ -1841,6 +1841,52 @@ const updateVeterinarianById = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get veterinarian appointments (for doctor dashboard)
+const getVeterinarianAppointments = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    
+    // Find veterinarian by userId
+    const veterinarian = await Veterinarian.findOne({ userId });
+    if (!veterinarian) {
+      return next(new AppError('Veterinarian profile not found', 404));
+    }
+
+    // Get all appointments for this veterinarian
+    const appointments = await Appointment.find({ 
+      veterinarianId: veterinarian._id 
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: appointments.length,
+      appointments
+    });
+  } catch (error) {
+    return next(new AppError('Failed to fetch appointments', 500));
+  }
+});
+
+// Update appointment status (for doctor)
+const updateAppointmentStatus = catchAsync(async (req, res, next) => {
+  const { appointmentId } = req.params;
+  const { status } = req.body;
+
+  const appointment = await Appointment.findById(appointmentId);
+  if (!appointment) {
+    return next(new AppError('Appointment not found', 404));
+  }
+
+  appointment.status = status;
+  await appointment.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Appointment status updated',
+    appointment
+  });
+});
+
 module.exports = {
   register,
   login,
@@ -1881,5 +1927,7 @@ module.exports = {
   unverifyClinic,
   deleteClinic,
   getVeterinarianById,
-  updateVeterinarianById
+  updateVeterinarianById,
+  getVeterinarianAppointments,
+  updateAppointmentStatus
 };
