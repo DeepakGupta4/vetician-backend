@@ -169,6 +169,40 @@ router.post('/veterinarian-register', registerVeterinarian);
 router.put('/veterinarian-update', updateVeterinarian);
 router.post('/check-veterinarian-verification', checkVeterinarianVerification);
 
+// Get all veterinarians for video consultation
+router.get('/veterinarians/all', async (req, res) => {
+  try {
+    console.log('📋 Fetching all veterinarians from User collection...');
+    
+    const User = require('../models/User');
+    
+    // Get all users with veterinarian role
+    const veterinarians = await User.find({
+      $or: [
+        { role: 'veterinarian' },
+        { userType: 'veterinarian' },
+        { loginType: 'veterinarian' }
+      ]
+    });
+    
+    console.log(`✅ Found ${veterinarians.length} veterinarians in User collection`);
+    
+    res.json({
+      success: true,
+      veterinarians: veterinarians,
+      count: veterinarians.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching veterinarians:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch veterinarians',
+      error: error.message
+    });
+  }
+});
+
 router.post('/admin/verified', getVerifiedVeterinarians);
 router.post('/admin/unverified', getUnverifiedVeterinarians);
 router.patch('/verify/:veterinarianId/:fieldName', verifyVeterinarianField);
