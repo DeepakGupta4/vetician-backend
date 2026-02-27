@@ -141,9 +141,11 @@ io.on('connection', (socket) => {
   socket.on('call-response', (data) => {
     console.log('📞 Call response received:', data);
     if (data.accepted) {
-      io.emit('call-accepted', data);
+      io.to(data.roomName).emit('call-accepted', data);
+      console.log(`✅ Call accepted event sent to room: ${data.roomName}`);
     } else {
-      io.emit('call-rejected', data);
+      io.to(data.roomName).emit('call-rejected', data);
+      console.log(`❌ Call rejected event sent to room: ${data.roomName}`);
     }
   });
 
@@ -154,8 +156,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('end-call', (data) => {
+    console.log(`📴 End call request for room: ${data.roomName}`);
     io.to(data.roomName).emit('call-ended', data);
-    console.log(`📴 Call ended: ${data.callId}`);
+    socket.leave(data.roomName);
+    console.log(`📴 Call ended and left room: ${data.roomName}`);
   });
 
   // WebRTC signaling
