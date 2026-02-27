@@ -124,7 +124,8 @@ io.on('connection', (socket) => {
 
   socket.on('join-veterinarian', (vetId) => {
     socket.join(`vet-${vetId}`);
-    console.log(`🩺 Veterinarian ${vetId} joined`);
+    console.log(`🩺 Veterinarian ${vetId} joined room: vet-${vetId}`);
+    console.log(`📊 Active rooms for socket ${socket.id}:`, Array.from(socket.rooms));
   });
 
   socket.on('join-petparent', (userId) => {

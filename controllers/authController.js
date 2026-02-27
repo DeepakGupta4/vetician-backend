@@ -1523,15 +1523,26 @@ const createAppointment = catchAsync(async (req, res, next) => {
 
   // 6. Emit real-time notification to veterinarian
   const io = req.app.get('io');
+  console.log('🔔 Attempting to send notification...');
+  console.log('IO exists:', !!io);
+  console.log('Veterinarian ID:', veterinarianId);
+  console.log('Room name:', `vet-${veterinarianId}`);
+  
   if (io && veterinarianId) {
-    io.to(`vet-${veterinarianId}`).emit('new-appointment', {
+    const notificationData = {
       appointmentId: newAppointment._id,
       petName: newAppointment.petName,
       petType: newAppointment.petType,
       date: newAppointment.date,
       bookingType: newAppointment.bookingType,
       message: `New ${bookingType} appointment for ${petName}`
-    });
+    };
+    
+    console.log('📤 Emitting notification:', notificationData);
+    io.to(`vet-${veterinarianId}`).emit('new-appointment', notificationData);
+    console.log('✅ Notification sent to room:', `vet-${veterinarianId}`);
+  } else {
+    console.log('❌ Cannot send notification - IO:', !!io, 'VetID:', veterinarianId);
   }
 
   // 7. Format the response data similar to your clinic/vet format
