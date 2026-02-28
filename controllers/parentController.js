@@ -33,7 +33,29 @@ const registerParent = catchAsync(async (req, res, next) => {
   });
 });
 
+// Update parent
+const updateParent = catchAsync(async (req, res, next) => {
+  const { name, email, phone, address, gender, dateOfBirth, emergencyContact, image } = req.body;
+  
+  const parent = await Parent.findByIdAndUpdate(
+    req.params.id,
+    { name, email, phone, address, gender, dateOfBirth, emergencyContact, image },
+    { new: true, runValidators: true }
+  );
+
+  if (!parent) {
+    return res.status(404).json({ success: false, message: 'Parent not found' });
+  }
+
+  res.json({
+    success: true,
+    message: 'Parent updated successfully',
+    parent
+  });
+});
+
 
 module.exports = {
-  registerParent
+  registerParent,
+  updateParent
 };

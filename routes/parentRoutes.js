@@ -1,6 +1,7 @@
 const express = require('express');
 const {
-  registerParent
+  registerParent,
+  updateParent
 } = require('../controllers/parentController');
 const {
   createPet,
@@ -26,6 +27,7 @@ router.get('/:userId', auth, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+router.put('/:id', auth, updateParent);
 router.post('/pets', auth, createPet);
 router.get('/pets/:userId', auth, getPetsByUserId);
 router.post('/appointments', auth, createAppointment);
