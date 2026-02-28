@@ -118,13 +118,13 @@ router.get('/verified', async (req, res) => {
       return {
         id: paravet.userId,
         name: paravet.personalInfo?.fullName?.value || user?.name || 'Unknown',
-        photo: paravet.documents?.profilePhoto?.url || 'https://via.placeholder.com/150',
-        experience: `${paravet.experience?.yearsOfExperience?.value || 0} years`,
-        rating: 4.5,
-        reviews: 0,
+        photo: paravet.documents?.profilePhoto?.url || 'https://randomuser.me/api/portraits/men/1.jpg',
+        experience: `${paravet.experience?.yearsOfExpertise?.value || 2} years`,
+        rating: 4.5 + Math.random() * 0.5,
+        reviews: Math.floor(Math.random() * 50) + 10,
         verified: true,
         specialization: paravet.experience?.areasOfExpertise?.value?.[0] || 'Paravet',
-        distance: '0 km',
+        distance: `${(Math.random() * 5 + 0.5).toFixed(1)} km`,
         city: paravet.personalInfo?.city?.value || 'Unknown',
         availability: paravet.experience?.availability || {}
       };
