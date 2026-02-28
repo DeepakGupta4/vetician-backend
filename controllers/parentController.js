@@ -37,10 +37,14 @@ const registerParent = catchAsync(async (req, res, next) => {
 const updateParent = catchAsync(async (req, res, next) => {
   try {
     const { name, email, phone, address, gender, dateOfBirth, emergencyContact, image } = req.body;
-    const userId = req.params.userId || req.params.id;
+    const userId = req.params.id || req.params.userId;
     
     console.log('Updating parent for userId:', userId);
     console.log('Update data:', { name, email, phone, address, gender, dateOfBirth, emergencyContact });
+    
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'User ID is required' });
+    }
     
     const parent = await Parent.findOneAndUpdate(
       { userId: userId },
