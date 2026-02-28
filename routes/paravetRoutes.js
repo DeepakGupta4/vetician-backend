@@ -74,24 +74,37 @@ router.get('/verified', async (req, res) => {
     
     // Create Paravet documents for users who don't have one
     for (const user of usersWithoutParavetDoc) {
-      console.log('⚠️ Creating Paravet doc for user:', user._id, user.name);
-      const newParavet = new Paravet({
-        userId: user._id.toString(),
-        personalInfo: {
-          fullName: { value: user.name, verified: true },
-          email: { value: user.email, verified: true }
-        },
-        applicationStatus: {
-          currentStep: 1,
-          completionPercentage: 10,
-          submitted: false,
-          approvalStatus: 'approved',
-          approvedAt: new Date()
-        },
-        isActive: true
-      });
-      await newParavet.save();
-      paravets.push(newParavet);
+      try {
+        console.log('⚠️ Creating Paravet doc for user:', user._id, user.name);
+        const newParavet = new Paravet({
+          userId: user._id.toString(),
+          personalInfo: {
+            fullName: { value: user.name, verified: true },
+            email: { value: user.email, verified: true }
+          },
+          applicationStatus: {
+            currentStep: 1,
+            completionPercentage: 10,
+            submitted: false,
+            approvalStatus: 'approved',
+            approvedAt: new Date()
+          },
+          isActive: true
+        });
+        await newParavet.save();
+        paravets.push(newParavet);
+      } catch (createError) {
+        // If duplicate key error, fetch existing document
+        if (createError.code === 11000) {
+          console.log('⚠️ Paravet doc already exists for user:', user._id);
+          const existingParavet = await Paravet.findOne({ userId: user._id.toString() });
+          if (existingParavet) {
+            paravets.push(existingParavet);
+          }
+        } else {
+          console.error('❌ Error creating Paravet doc:', createError.message);
+        }
+      }
     }
     
     const paravetData = await Promise.all(paravets.map(async (paravet) => {
