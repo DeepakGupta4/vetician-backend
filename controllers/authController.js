@@ -1527,25 +1527,31 @@ const createAppointment = catchAsync(async (req, res, next) => {
 
   // 6. Save notification to database and emit real-time notification
   if (veterinarianId) {
-    const notification = await Notification.create({
-      userId: veterinarianId,
-      userType: 'Veterinarian',
-      title: 'New Appointment',
-      message: `New ${bookingType} appointment for ${petName}`,
-      type: 'appointment',
-      relatedId: newAppointment._id
-    });
-
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`vet-${veterinarianId}`).emit('new-appointment', {
-        appointmentId: newAppointment._id,
-        petName: newAppointment.petName,
-        petType: newAppointment.petType,
-        date: newAppointment.date,
-        bookingType: newAppointment.bookingType,
-        message: `New ${bookingType} appointment for ${petName}`
+    // Get veterinarian's userId for socket notification
+    const veterinarian = await Veterinarian.findById(veterinarianId);
+    if (veterinarian && veterinarian.userId) {
+      const notification = await Notification.create({
+        userId: veterinarian.userId,  // Use userId instead of veterinarianId
+        userType: 'Veterinarian',
+        title: 'New Appointment',
+        message: `New ${bookingType} appointment for ${petName}`,
+        type: 'appointment',
+        relatedId: newAppointment._id
       });
+
+      const io = req.app.get('io');
+      if (io) {
+        // Emit to veterinarian's userId socket room
+        io.to(`vet-${veterinarian.userId}`).emit('new-appointment', {
+          appointmentId: newAppointment._id,
+          petName: newAppointment.petName,
+          petType: newAppointment.petType,
+          date: newAppointment.date,
+          bookingType: newAppointment.bookingType,
+          message: `New ${bookingType} appointment for ${petName}`
+        });
+        console.log(`📡 Notification sent to vet-${veterinarian.userId}`);
+      }
     }
   }
 
