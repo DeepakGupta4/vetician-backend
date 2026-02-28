@@ -682,26 +682,29 @@ const registerClinic = catchAsync(async (req, res, next) => {
     });
   }
 
-  // Check existing clinics
-  const existingClinic = await Clinic.findOne({
-    $or: [
-      { userId: clinicData.userId },
-      {
-        clinicName: clinicData.clinicName,
-        city: clinicData.city
-      }
-    ]
-  });
-
-  if (existingClinic) {
-    const message = existingClinic.userId === clinicData.userId
-      ? 'You have already registered a clinic'
-      : 'A clinic with this name already exists in this city';
-
+  // Check if user already has a clinic
+  const userClinic = await Clinic.findOne({ userId: clinicData.userId });
+  if (userClinic) {
     return res.status(400).json({
       success: false,
       error: {
-        message,
+        message: 'You have already registered a clinic',
+        code: 400
+      }
+    });
+  }
+
+  // Check if clinic name already exists in the same city
+  const existingClinic = await Clinic.findOne({
+    clinicName: clinicData.clinicName,
+    city: clinicData.city
+  });
+
+  if (existingClinic) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        message: 'A clinic with this name already exists in this city',
         code: 400
       }
     });
