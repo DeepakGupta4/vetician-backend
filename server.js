@@ -145,16 +145,23 @@ io.on('connection', (socket) => {
       const roomParts = data.roomName.split('-');
       const callerId = roomParts[1];
       
-      // Emit to both room and caller's user room
+      console.log(`✅ Emitting call-accepted to room: ${data.roomName} and caller: ${callerId}`);
+      
+      // Emit to room first
       io.to(data.roomName).emit('call-accepted', data);
+      // Then emit to caller's personal room
       io.to(callerId).emit('call-accepted', data);
-      console.log(`✅ Call accepted event sent to room: ${data.roomName} and caller: ${callerId}`);
+      // Also emit to all connected clients as fallback
+      socket.broadcast.emit('call-accepted', data);
+      
+      console.log(`✅ Call accepted events sent`);
     } else {
       const roomParts = data.roomName.split('-');
       const callerId = roomParts[1];
       
       io.to(data.roomName).emit('call-rejected', data);
       io.to(callerId).emit('call-rejected', data);
+      socket.broadcast.emit('call-rejected', data);
       console.log(`❌ Call rejected event sent to room: ${data.roomName} and caller: ${callerId}`);
     }
   });
