@@ -114,20 +114,23 @@ router.post('/delete-account', auth, deleteAccount);
 
 const parentUpdateValidation = [
   body('name')
+    .optional()
     .trim()
     .isLength({ min: 2 })
-    .withMessage('Name is required and must be at least 2 characters'),
+    .withMessage('Name must be at least 2 characters'),
   body('email')
+    .optional()
     .isEmail()
     .normalizeEmail()
     .withMessage('Valid email is required'),
   body('phone')
-    .matches(/^[0-9]{10,15}$/)
-    .withMessage('Valid phone number is required (10-15 digits)'),
+    .optional()
+    .matches(/^\+?[0-9]{10,15}$/)
+    .withMessage('Valid phone number is required'),
   body('address')
+    .optional()
     .trim()
-    .isLength({ min: 10 })
-    .withMessage('Complete address is required (minimum 10 characters)')
+    .withMessage('Address is optional')
 ];
 
 router.post('/parent-register', registerParent);
