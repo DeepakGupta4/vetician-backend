@@ -130,12 +130,11 @@ const parentUpdateValidation = [
   body('address')
     .optional()
     .trim()
-    .withMessage('Address is optional')
 ];
 
 router.post('/parent-register', registerParent);
 router.get('/parents/:userId', getParentById);
-router.put('/parent/:userId', auth, parentUpdateValidation, validate, updateParent);
+router.put('/parent/:userId', auth, updateParent);
 router.patch('/parents/:id', updateParent);
 router.delete('/parents/:id', deleteParent);
 
