@@ -31,7 +31,8 @@ const parentSchema = new mongoose.Schema({
     validate: {
       validator: function(v) {
         if (!v) return true;
-        return /^[0-9]{10,15}$/.test(v);
+        // Allow + at start and then 10-15 digits
+        return /^\+?[0-9]{10,15}$/.test(v);
       },
       message: props => `${props.value} is not a valid phone number!`
     }
@@ -53,6 +54,22 @@ const parentSchema = new mongoose.Schema({
     enum: ['male', 'female', 'other'],
     default: 'other',
     required: [true, 'Gender is required'],
+  },
+  dateOfBirth: {
+    type: Date,
+    default: null,
+  },
+  emergencyContact: {
+    type: String,
+    trim: true,
+    default: null,
+    validate: {
+      validator: function(v) {
+        if (!v) return true;
+        return /^\+?[0-9]{10,15}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid emergency contact number!`
+    }
   },
   image: {
     type: String,

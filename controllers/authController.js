@@ -356,8 +356,8 @@ const updateParent = catchAsync(async (req, res, next) => {
     return next(new AppError('Please provide a valid email address', 400));
   }
 
-  if (phone && (phone.length < 10 || phone.length > 15 || !/^\d+$/.test(phone))) {
-    return next(new AppError('Please provide a valid phone number (10-15 digits)', 400));
+  if (phone && !/^\+?[0-9]{10,15}$/.test(phone)) {
+    return next(new AppError('Please provide a valid phone number (10-15 digits, + allowed)', 400));
   }
 
   if (email && email !== parent.email) {
