@@ -4,7 +4,7 @@ const petSchema = new mongoose.Schema({
   // Personal Details
   petPhoto: {
     type: String,
-    required: true
+    default: null
   },
   name: {
     type: String,
