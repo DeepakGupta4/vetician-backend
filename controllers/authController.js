@@ -55,19 +55,24 @@ const register = catchAsync(async (req, res, next) => {
     role: userRole
   });
 
+  let user;
   if (existingUser) {
-    return next(new AppError(`User with this email already exists as a ${userRole}`, 400));
+    // User already exists (created during OTP step) — update details
+    existingUser.name = name.trim();
+    if (phone) existingUser.phone = phone.trim();
+    existingUser.password = password;
+    await existingUser.save();
+    user = existingUser;
+  } else {
+    user = new User({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone.trim(),
+      password,
+      role: userRole
+    });
+    await user.save();
   }
-
-  const user = new User({
-    name: name.trim(),
-    email: email.toLowerCase().trim(),
-    phone: phone.trim(),
-    password,
-    role: userRole
-  });
-
-  await user.save();
 
   try {
     if (userRole === 'vetician') {
@@ -80,16 +85,27 @@ const register = catchAsync(async (req, res, next) => {
       });
       
       if (!parent) {
-        parent = new Parent({
-          name: user.name,
-          email: user.email,
-          phone: user.phone ? user.phone.replace(/\+/g, '') : '',
-          address: 'Not provided',
-          user: user._id,
-          gender: 'other'
-        });
-        await parent.save();
-        console.log('✅ Parent record created:', parent._id);
+        try {
+          parent = new Parent({
+            name: user.name,
+            email: user.email,
+            phone: user.phone ? user.phone.replace(/\+/g, '') : '0000000000',
+            address: 'Not provided',
+            user: user._id,
+            gender: 'other'
+          });
+          await parent.save();
+          console.log('✅ Parent record created:', parent._id);
+        } catch (parentErr) {
+          // Parent with this email might already exist from a different user ref
+          const existingByEmail = await Parent.findOne({ email: user.email });
+          if (existingByEmail) {
+            existingByEmail.user = user._id;
+            existingByEmail.name = user.name;
+            await existingByEmail.save();
+            console.log('✅ Parent record linked:', existingByEmail._id);
+          }
+        }
       } else {
         console.log('ℹ️ Parent record already exists:', parent._id);
       }
