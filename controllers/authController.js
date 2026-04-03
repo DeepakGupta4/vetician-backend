@@ -1778,83 +1778,47 @@ const sendOTP = catchAsync(async (req, res, next) => {
     expiresAt: new Date(Date.now() + 10 * 60 * 1000)
   });
   
-  if (phoneNumber) {
+  // Always return OTP in response (Twilio trial & email fallback)
+  res.status(200).json({
+    success: true,
+    message: 'OTP generated successfully',
+    verificationId,
+    otp
+  });
+
+  // Try sending SMS in background (non-blocking)
+  if (phoneNumber && process.env.TWILIO_ACCOUNT_SID) {
     try {
       const twilio = require('twilio');
-      const client = twilio(
-        process.env.TWILIO_ACCOUNT_SID,
-        process.env.TWILIO_AUTH_TOKEN
-      );
-      
+      const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
       await client.messages.create({
         body: `Your Vetician OTP is: ${otp}. Valid for 10 minutes.`,
         from: process.env.TWILIO_PHONE_NUMBER,
         to: phoneNumber
       });
-      
-      res.status(200).json({
-        success: true,
-        message: 'OTP sent successfully',
-        verificationId,
-        otp
-      });
-    } catch (error) {
-      console.error('❌ Twilio SMS error:', error.message);
-      // SMS failed — return OTP in response as fallback (dev/trial mode)
-      return res.status(200).json({
-        success: true,
-        message: 'SMS unavailable. Use the OTP shown here.',
-        verificationId,
-        otp,
-        smsFailed: true
-      });
+      console.log('✅ SMS sent to:', phoneNumber);
+    } catch (err) {
+      console.error('❌ SMS failed (OTP still in response):', err.message);
     }
-  } else {
+  }
+
+  if (email && process.env.EMAIL_USER) {
     try {
       const nodemailer = require('nodemailer');
-      
       const transporter = nodemailer.createTransport({
         service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        },
-        tls: {
-          rejectUnauthorized: false
-        }
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+        tls: { rejectUnauthorized: false }
       });
-      
-      await transporter.verify();
-      
-      const mailOptions = {
-        from: `"Vetician App" <${process.env.EMAIL_USER}>`,
+      await transporter.sendMail({
+        from: `"Vetician" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Your Vetician OTP Code',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #4A90E2;">Vetician OTP Verification</h2>
-            <p>Your OTP code is:</p>
-            <div style="background-color: #f0f7ff; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-              <h1 style="color: #4A90E2; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
-            </div>
-            <p>This code will expire in 10 minutes.</p>
-            <p>If you didn't request this code, please ignore this email.</p>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="color: #666; font-size: 12px;">This is an automated message from Vetician. Please do not reply.</p>
-          </div>
-        `
-      };
-      
-      await transporter.sendMail(mailOptions);
-      
-      res.status(200).json({
-        success: true,
-        message: 'OTP sent successfully to your email',
-        verificationId,
-        otp
+        html: `<h2>Your OTP: <b>${otp}</b></h2><p>Valid for 10 minutes.</p>`
       });
-    } catch (emailError) {
-      return next(new AppError('Failed to send email OTP. Please try again.', 500));
+      console.log('✅ Email sent to:', email);
+    } catch (err) {
+      console.error('❌ Email failed (OTP still in response):', err.message);
     }
   }
 });
