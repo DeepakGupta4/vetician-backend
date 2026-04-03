@@ -78,6 +78,12 @@ userSchema.pre('save', async function(next) {
   try {
     const hashedPassword = await bcrypt.hash(this.password, 12);
     this.password = hashedPassword;
+    
+    // Make phone optional for admin users
+    if (this.role === 'admin' && !this.phone) {
+      this.phone = null;
+    }
+    
     next();
   } catch (error) {
     next(error);

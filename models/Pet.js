@@ -21,8 +21,8 @@ const petSchema = new mongoose.Schema({
   },
   breed: {
     type: String,
-    required: [true, 'Breed is required'],
     trim: true,
+    default: ''
   },
   gender: {
     type: String,
@@ -31,68 +31,68 @@ const petSchema = new mongoose.Schema({
   },
   location: {
     type: String,
-    required: [true, 'Location is required'],
     trim: true,
+    default: ''
   },
   dob: {
     type: Date,
-    required: [true, 'Date of birth is required'],
+    default: null
   },
   bloodGroup: {
     type: String,
-    required: [true, 'Blood group is required'],
     trim: true,
     uppercase: true,
+    default: ''
   },
   height: {
     type: Number,
-    required: [true, 'Height is required'],
     min: [1, 'Height must be at least 1 cm'],
+    default: null
   },
   weight: {
     type: Number,
-    required: [true, 'Weight is required'],
     min: [0.1, 'Weight must be at least 0.1 kg'],
+    default: null
   },
   color: {
     type: String,
-    required: [true, 'Color is required'],
     trim: true,
+    default: ''
   },
   distinctiveFeatures: {
     type: String,
-    required: [true, 'Distinctive features are required'],
     trim: true,
+    default: ''
   },
 
-  // Medical Details
+  // Medical Details - ALL OPTIONAL
   allergies: {
     type: String,
-    required: [true, 'Allergies info is required'],
+    default: ''
   },
   currentMedications: {
     type: String,
-    required: [true, 'Current medications info is required'],
+    default: ''
   },
   pastMedications: {
     type: String,
-    default: null,
+    default: ''
   },
   chronicDiseases: {
     type: String,
-    required: [true, 'Chronic diseases info is required'],
+    default: ''
   },
   injuries: {
     type: String,
-    required: [true, 'Injuries info is required'],
+    default: ''
   },
   surgeries: {
     type: String,
-    required: [true, 'Surgeries info is required'],
+    default: ''
   },
   vaccinations: {
     type: String,
-    required: [true, 'Vaccinations info is required'],
+    default: ''
   },
   userId: {
     type: String,
@@ -112,8 +112,8 @@ const petSchema = new mongoose.Schema({
   },
   notes: {
     type: String,
-    required: [true, 'Notes are required'],
     trim: true,
+    default: ''
   }
 }, {
   timestamps: true

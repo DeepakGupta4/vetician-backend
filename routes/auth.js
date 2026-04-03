@@ -46,7 +46,8 @@ const {
   updateAppointmentStatus,
   getPetParentAppointments,
   getNotifications,
-  markNotificationRead
+  markNotificationRead,
+  changePassword
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -102,11 +103,158 @@ const loginValidation = [
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
 
+/* =========================
+   ADMIN ROUTES
+========================= */
+
+const User = require('../models/User');
+
+// Admin Registration
+router.post('/admin/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  
+  console.log('🔵 Admin registration attempt:', { username, email });
+  
+  try {
+    // Validate input
+    if (!username || !email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Username, email, and password are required' 
+      });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Password must be at least 6 characters' 
+      });
+    }
+    
+    // Check if admin already exists
+    const existingUser = await User.findOne({ 
+      email: email.toLowerCase().trim(), 
+      role: 'admin' 
+    });
+    
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Admin with this email already exists' 
+      });
+    }
+    
+    // Create new admin user
+    const user = new User({
+      name: username.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+      role: 'admin',
+      phone: null // Admin doesn't need phone
+    });
+    
+    await user.save();
+    console.log('✅ Admin created successfully:', user._id);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Admin registered successfully',
+      data: { 
+        user: user.getPublicProfile() 
+      }
+    });
+  } catch (error) {
+    console.error('❌ Admin registration error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Registration failed' 
+    });
+  }
+});
+
+// Admin Login
+router.post('/admin/login', async (req, res) => {
+  const { email, password } = req.body;
+  
+  console.log('🔵 Admin login attempt:', { email });
+  
+  try {
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email and password are required' 
+      });
+    }
+    
+    // Find admin user
+    const user = await User.findOne({ 
+      email: email.toLowerCase().trim(), 
+      role: 'admin' 
+    }).select('+password');
+    
+    if (!user) {
+      console.log('❌ Admin not found');
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid credentials. Please check your email and password.' 
+      });
+    }
+    
+    // Verify password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      console.log('❌ Invalid password');
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid credentials. Please check your email and password.' 
+      });
+    }
+    
+    // Generate tokens
+    const jwt = require('jsonwebtoken');
+    const accessToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRE || '24h' }
+    );
+    
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d' }
+    );
+    
+    // Save refresh token
+    user.refreshTokens.push({ token: refreshToken });
+    await user.save();
+    await user.updateLastLogin();
+    
+    console.log('✅ Admin login successful');
+    
+    res.json({
+      success: true,
+      data: {
+        user: user.getPublicProfile(),
+        token: accessToken,
+        refreshToken
+      }
+    });
+  } catch (error) {
+    console.error('❌ Admin login error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Login failed. Please try again.' 
+    });
+  }
+});
+
 router.post('/refresh-token', refreshToken);
 router.post('/logout', auth, logout);
 router.post('/logout-all', auth, logoutAll);
 
 router.post('/delete-account', auth, deleteAccount);
+router.post('/change-password', auth, changePassword);
 
 /* =========================
    PARENT ROUTES

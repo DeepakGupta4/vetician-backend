@@ -2,6 +2,7 @@ const Clinic = require('../models/Clinic');
 const Veterinarian = require('../models/Veterinarian');
 const Appointment = require('../models/Appointment');
 const { catchAsync } = require('../utils/catchAsync');
+const { AppError } = require('../utils/appError');
 
 // Utility function to calculate distance between two coordinates
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -463,7 +464,11 @@ const getAllClinicsWithVets = catchAsync(async (req, res, next) => {
   const clinics = await Clinic.find({ verified: true }).lean();
   
   if (!clinics || clinics.length === 0) {
-    return next(new AppError('No verified clinics found', 404));
+    return res.status(200).json({
+      success: true,
+      count: 0,
+      data: []
+    });
   }
 
   // 2. Get all unique user IDs from clinics
@@ -586,8 +591,9 @@ const createAppointment = catchAsync(async (req, res, next) => {
   }
 
   // 4. Validate veterinarian exists if provided
+  let veterinarian = null;
   if (veterinarianId) {
-    const veterinarian = await Veterinarian.findById(veterinarianId);
+    veterinarian = await Veterinarian.findById(veterinarianId);
     if (!veterinarian) {
       return next(new AppError('No veterinarian found with that ID', 404));
     }

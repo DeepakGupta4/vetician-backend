@@ -48,11 +48,22 @@ router.post('/image', auth, upload.single('file'), async (req, res) => {
 router.post('/', upload.single('file'), async (req, res) => {
   try {
     console.log('📤 Upload request received');
+    console.log('Headers:', req.headers);
     console.log('File:', req.file ? 'Present' : 'Missing');
     console.log('Body:', req.body);
+    console.log('Files:', req.files);
     
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded' });
+      console.log('❌ No file in request');
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No file uploaded. Please ensure file is attached properly.',
+        debug: {
+          hasFile: !!req.file,
+          hasFiles: !!req.files,
+          bodyKeys: Object.keys(req.body)
+        }
+      });
     }
 
     const documentType = req.body.documentType || 'document';

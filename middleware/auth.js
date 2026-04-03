@@ -18,10 +18,16 @@ const auth = catchAsync(async (req, res, next) => {
 
   try {
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    console.log('🔍 Decoded token:', JSON.stringify(decoded, null, 2));
 
     const user = await User.findById(decoded.userId);
+    console.log('👤 User lookup for ID:', decoded.userId);
+    console.log('👤 User found:', user ? `Yes - ${user._id}` : 'No');
+    
     if (!user) {
-      return next(new AppError('User not found', 401));
+      console.log('❌ User not found for ID:', decoded.userId);
+      console.log('💡 Tip: The token might be from an old session or the user was deleted');
+      return next(new AppError('User not found. Please login again.', 401));
     }
 
     if (!user.isActive) {
@@ -33,6 +39,7 @@ const auth = catchAsync(async (req, res, next) => {
     }
     req.user = user;
     req.user.userId = user._id;
+    console.log('✅ Auth successful for user:', user._id);
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

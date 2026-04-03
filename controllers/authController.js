@@ -11,6 +11,7 @@ const PetResort = require('../models/PetResort');
 const Appointment = require('../models/Appointment');
 const Notification = require('../models/Notification');
 const { getCoordinatesFromAddress } = require('../utils/geocoding');
+const OTP = require('../models/OTP');
 
 
 // Generate JWT tokens
@@ -1194,9 +1195,29 @@ const deleteUserPet = catchAsync(async (req, res, next) => {
   });
 });
 
+// Change Password
+const changePassword = catchAsync(async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = req.user;
+
+  if (!currentPassword || !newPassword)
+    return next(new AppError('Current and new password are required', 400));
+
+  if (newPassword.length < 6)
+    return next(new AppError('New password must be at least 6 characters', 400));
+
+  const userWithPass = await User.findById(user._id).select('+password');
+  const isValid = await userWithPass.comparePassword(currentPassword);
+  if (!isValid) return next(new AppError('Current password is incorrect', 401));
+
+  userWithPass.password = newPassword;
+  await userWithPass.save();
+
+  res.json({ success: true, message: 'Password changed successfully' });
+});
+
 // Refresh access token
 const refreshToken = catchAsync(async (req, res, next) => {
-  const { refreshToken: token } = req.body;
 
   if (!token) {
     return next(new AppError('Refresh token is required', 400));
@@ -1663,9 +1684,6 @@ const createAppointment = catchAsync(async (req, res, next) => {
 
 
 
-// OTP Storage (In production, use Redis or database)
-const otpStorage = new Map();
-
 // Generate random 6-digit OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -1734,19 +1752,30 @@ const sendOTP = catchAsync(async (req, res, next) => {
   } else {
     user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return next(new AppError('User not found. Please sign up first.', 404));
+      const userRole = loginType || 'veterinarian';
+      user = new User({
+        name: name || email.split('@')[0],
+        email: email.toLowerCase(),
+        phone: '',
+        password: `vet${Date.now()}`,
+        role: userRole
+      });
+      await user.save();
     }
   }
   
   const otp = generateOTP();
   const verificationId = 'verify_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  
-  otpStorage.set(verificationId, {
+
+  const normalizedEmail = email ? email.toLowerCase().trim() : undefined;
+  await OTP.findOneAndDelete({ $or: [{ phoneNumber }, { email: normalizedEmail }] });
+  await OTP.create({
+    verificationId,
     phoneNumber,
-    email,
+    email: normalizedEmail,
     otp,
     userId: user?._id,
-    expiresAt: Date.now() + 10 * 60 * 1000
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000)
   });
   
   if (phoneNumber) {
@@ -1832,37 +1861,37 @@ const sendOTP = catchAsync(async (req, res, next) => {
 
 // Verify OTP
 const verifyOTP = catchAsync(async (req, res, next) => {
-  const { phoneNumber, email, otp, verificationId } = req.body;
+  const { phoneNumber, otp, verificationId } = req.body;
+  const email = req.body.email ? req.body.email.toLowerCase().trim() : undefined;
   
   if ((!phoneNumber && !email) || !otp || !verificationId) {
     return next(new AppError('Phone/Email, OTP, and verification ID are required', 400));
   }
   
-  const storedData = otpStorage.get(verificationId);
+  const storedData = await OTP.findOne({ verificationId });
   if (!storedData) {
     console.log('❌ Verification ID not found or expired:', verificationId);
-    console.log('🗺 Available verification IDs:', Array.from(otpStorage.keys()));
     return next(new AppError('Invalid or expired verification ID. Please request a new OTP.', 400));
   }
-  
-  if (Date.now() > storedData.expiresAt) {
-    otpStorage.delete(verificationId);
+
+  if (new Date() > storedData.expiresAt) {
+    await OTP.deleteOne({ verificationId });
     return next(new AppError('OTP has expired', 400));
   }
-  
+
   if (phoneNumber && storedData.phoneNumber !== phoneNumber) {
     return next(new AppError('Phone number mismatch', 400));
   }
-  
+
   if (email && storedData.email !== email) {
     return next(new AppError('Email mismatch', 400));
   }
-  
+
   if (storedData.otp !== otp) {
     return next(new AppError('Invalid OTP', 400));
   }
-  
-  otpStorage.delete(verificationId);
+
+  await OTP.deleteOne({ verificationId });
   
   let user;
   if (phoneNumber) {
@@ -2156,5 +2185,6 @@ module.exports = {
   updateAppointmentStatus,
   getPetParentAppointments,
   getNotifications,
-  markNotificationRead
+  markNotificationRead,
+  changePassword
 };
